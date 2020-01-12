@@ -5,13 +5,14 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const todoRoutes = express.Router(); // Create an instance of the Express Router
 const PORT = 4000;
+const mongoURI = require('./config').MongoURI
 
 let Todo = require('./todo.model');
 
 app.use(cors());
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb+srv://Himanshu:3rdMAY1998@cluster0-fpm5m.mongodb.net/test?retryWrites=true&w=majority', { useNewUrlParser: true })
+mongoose.connect(mongoURI, { useNewUrlParser: true })
      .then(() => console.log('Mongo db connected'))
      .catch(err => console.log(err));
 
