@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route } from "react-router-dom";
-import './App.css';
-import "bootstrap/dist/css/bootstrap.min.css";
+import 'antd/dist/antd.css';
 
 import EditTodo from "./components/edit-todo.component";
 import TodosList from "./components/todos-list.component";

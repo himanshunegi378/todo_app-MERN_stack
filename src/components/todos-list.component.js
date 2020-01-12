@@ -2,20 +2,41 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
+import { List, Button, Descriptions, Table, Divider, Tag, Tooltip, Icon, Checkbox } from 'antd';
+import './style.css'
+
 import CreateTask from './create-todo.component'
 
 const Todo = props => (
-    <tr>
-        <td>{props.todo.todo_description}</td>
-        <td>{props.todo.todo_responsible}</td>
-        <td>{props.todo.todo_priority}</td>
-        <td>
-            <Link to={"/edit/" + props.todo._id}>Edit</Link>
-        </td>
-        <td>
-            <input type='button' value="delete" onClick={() => props.delete(props.todo._id)} />
-        </td>
-    </tr>
+    <List.Item className="list-item"
+        actions={[
+            <Tooltip title="Remove Todo">
+                <Button type="danger" onClick={() => props.delete(props.todo._id)}>
+                    <Icon type="delete" />
+                </Button>
+            </Tooltip>
+        ]}
+    >
+        <div className="todo-item">
+            <Tooltip
+                title={props.todo.todo_completed ? "Mark as uncompleted" : "Mark as completed"}
+            >
+                <Checkbox
+                    defaultChecked={props.todo.todo_completed}
+                    onChange={() => props.toggle(props.todo._id)}
+                />
+            </Tooltip>
+
+            <Tag color={props.todo.todo_completed ? "green" : "volcano"} className="todo-tag">
+                {props.todo.todo_completed ? <Icon type="check" /> : "-"}
+            </Tag>
+
+            <div className="todo-name">
+                {props.todo.todo_completed ? <del>{props.todo.todo_description}</del> : props.todo.todo_description}
+            </div>
+        </div>
+
+    </List.Item>
 );
 
 export default class TodosList extends Component {
@@ -28,6 +49,7 @@ export default class TodosList extends Component {
 
         this.deleteTodoItem = this.deleteTodoItem.bind(this);
         this.addTodoItem = this.addTodoItem.bind(this)
+        this.onToggleComplete = this.onToggleComplete.bind(this)
     }
 
     // To retrieve the todos data from the database --> use the componentDidMount lifecycle method
@@ -46,7 +68,7 @@ export default class TodosList extends Component {
             })
     }
 
-    // update the state with row with the id removed and then send an id to the backend to remove from the database 
+    // update the state with row with the matching id removed and then send same id to the backend to remove from the database 
     deleteTodoItem(id) {
         let newState = this.state
         newState.todos = newState.todos.filter(x => x._id !== id)
@@ -54,14 +76,25 @@ export default class TodosList extends Component {
         this.setState({ newState }, () => {
             axios.post('http://localhost:4000/todos/delete/' + id);
         })
-
-
-
+    }
+    // toggle todo_completed state of todoItem with matching id and then send the id to the backend to do the same in database
+    onToggleComplete(id) {
+        let newState = this.state
+        newState.todos = newState.todos.map((currentTodo) => {
+            if (currentTodo._id === id)
+            {
+                currentTodo.todo_completed = !currentTodo.todo_completed
+            }
+            return currentTodo
+        })
+        this.setState({ newState }, () => {
+            axios.post('http://localhost:4000/todos/toggleComplete/' + id)
+        })
     }
 
     //passed as props to "CreateTask" component. It will be called by the "CreateTask" Component when user creates and submit the new task
     addTodoItem(todoItem) {
-        this.setState(prevState=>{
+        this.setState(prevState => {
             const newState = prevState
             newState.todos.unshift(todoItem)
             return newState
@@ -71,7 +104,7 @@ export default class TodosList extends Component {
     // create an array of Todo components from this.state object
     todoList() {
         return this.state.todos.map((currentTodo) => {
-            return <Todo todo={currentTodo} key={currentTodo._id} delete={this.deleteTodoItem} />;
+            return <Todo todo={currentTodo} key={currentTodo._id} toggle={this.onToggleComplete} delete={this.deleteTodoItem} />;
         })
     }
 
@@ -79,20 +112,12 @@ export default class TodosList extends Component {
         return (
             <div>
                 <CreateTask addItem={this.addTodoItem} />
-                <h3>Todos List</h3>
-                <table className="table table-striped" style={{ marginTop: 20 }} >
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Responsible</th>
-                            <th>Priority</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.todoList()}
-                    </tbody>
-                </table>
+                <List
+                    header={<div>Todo List</div>}
+                    bordered
+                    dataSource={this.todoList()}
+                    renderItem={item => (item)}
+                />
             </div>
         )
     }

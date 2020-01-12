@@ -45,6 +45,7 @@ todoRoutes.route('/:id').get(function (req, res) {
                }
                return res.status(200).json(todo);
           })
+          .catch(err=>console.log(err))
 });
 
 // POST: Add New Todo Item to MongoDB Database.
@@ -52,7 +53,7 @@ todoRoutes.route('/add').post(function (req, res) {
      let todo = new Todo(req.body);
      todo.save()
           .then(todo => {
-               res.status(200).json({"todo": todo ,'msg': 'todo added successfully' });
+               res.status(200).json({ "todo": todo, 'msg': 'todo added successfully' });
           })
           .catch(err => {
                console.log(err)
@@ -66,6 +67,15 @@ todoRoutes.route('/delete/:id').post((req, res) => {
           .then(() => res.json({ msg: "deleted" }))
           .catch(err => console.log(err))
 
+})
+
+todoRoutes.route('/toggleComplete/:id').post((req, res) => {
+     Todo.findById(req.params.id)
+          .then((todo) => {
+               todo.todo_completed = !todo.todo_completed
+               todo.save()
+          })
+          .catch(err=>console.log(err))
 })
 
 // POST: Update a existing todo item by providing an ID.
